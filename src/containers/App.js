@@ -25,7 +25,10 @@ class App extends Component {
         <Picker value={selectedCategory}
           onChange={this.handleChange}
           options={['all', 'react', 'redux', 'udacity']} />
-        <PostList posts={postsByCategory[selectedCategory]}></PostList>
+          { postsByCategory.isFetching === true
+            ? <h1>is loading</h1>
+            : <PostList posts={postsByCategory[selectedCategory]}></PostList>
+          }
       </div>
     );
   }
