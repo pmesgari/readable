@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux'
 import PropTypes from 'prop-types';
 
 class PostList extends React.Component {
@@ -6,36 +7,27 @@ class PostList extends React.Component {
     console.log(nextProps);
   }
   render() {
-    const { posts } = this.props
-    console.log(posts);
-    console.log(this.props.posts.isFetching);
+    const { postsByCategory, selectedCategory } = this.props
     return (
       <span>
-      {/* {posts.isFetching === true
-        ? <h1>loading</h1>
-        : <h1>loaded</h1>
-        // : posts.items.map((post) => (
-        //   <h1>Title</h1>
-        //   ))
-      } */}
-    </span>
+        {postsByCategory[selectedCategory].items.map((post) => (
+          <h1>{post.title}</h1>
+        ))}
+      </span>
     )
   }
 }
-// const PostList = (posts) => (
-//   <span>
-//     {posts.isFetching === true
-//       ? <h1>loading</h1>
-//       : <h1>loaded</h1>
-//       // : posts.items.map((post) => (
-//       //   <h1>Title</h1>
-//       //   ))
-//     }
-//   </span>
-// )
 
 PostList.propTypes = {
   posts: PropTypes.object.isRequired
 };
 
-export default PostList;
+const mapStateToProps = state => {
+  const { postsByCategory, selectedCategory } = state;
+  return {
+    postsByCategory,
+    selectedCategory
+  };
+}
+
+export default connect(mapStateToProps)(PostList);

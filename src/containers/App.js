@@ -19,26 +19,22 @@ class App extends Component {
     this.props.dispatch(selectCategory(nextCategory))
   }
   render() {
-    const { selectedCategory, postsByCategory } = this.props
+    const { selectedCategory } = this.props
     return (
       <div className="App">
         <Picker value={selectedCategory}
           onChange={this.handleChange}
           options={['all', 'react', 'redux', 'udacity']} />
-          { postsByCategory.isFetching === true
-            ? <h1>is loading</h1>
-            : <PostList posts={postsByCategory[selectedCategory]}></PostList>
-          }
+          <PostList></PostList>
       </div>
     );
   }
 }
 
 const mapStateToProps = state => {
-  const { selectedCategory, postsByCategory } = state;
+  const { selectedCategory } = state;
   return {
-    selectedCategory,
-    postsByCategory
+    selectedCategory
   };
 }
 
