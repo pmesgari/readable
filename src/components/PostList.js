@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
+import { invalidatePost, fetchPostsIfNeeded } from '../actions';
 import '../index.css';
 
 class PostList extends React.Component {
@@ -20,6 +21,15 @@ class PostList extends React.Component {
     let updatedPost = {...this.state.selectedPost, 'body': value}
     this.setState({selectedPost: updatedPost})
   }
+  upVote = () => {
+    console.log('up');
+    const { dispatch, selectedCategory } = this.props;
+    dispatch(invalidatePost(selectedCategory));
+    dispatch(fetchPostsIfNeeded(selectedCategory));
+  }
+  componentDidMount() {
+    
+  }
   componentWillReceiveProps(nextProps) {
     console.log(nextProps);
   }
@@ -37,17 +47,22 @@ class PostList extends React.Component {
                     <h5 className="card-title">{post.title}</h5>
                     <p className="card-text">{post.body}</p>
                     <div className="btn-container">
-                      <Link className="btn btn-primary" to="/modus-create">Modus Create</Link>
+                      <Link className="btn btn-primary" to="/modus-create">Edit</Link>
                       <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Details</button>
-                      <button type="button" className="btn btn-success">Edit</button>
                       <button type="button" className="btn btn-danger">Remove</button>
                     </div>
                   </div>
                   <div className="card-footer text-muted">
+                    <div className="author">Author: {post.author}</div>
+                    <div className="comments">Comments: {post.commentCount}</div>
                     <div className="vote-container">
                       <div className="post-score">{post.voteScore}</div>
-                      <i className="fa fa-thumbs-up"></i>
-                      <i className="fa fa-thumbs-down"></i>
+                      <button className="btn btn-outline-primary" onClick={this.upVote}>
+                        <i className="fa fa-thumbs-up"></i>
+                      </button>
+                      <button className="btn btn-outline-danger" onClick={this.downVote}>
+                        <i className="fa fa-thumbs-down"></i>
+                      </button>
                     </div>
                   </div>
                 </div>

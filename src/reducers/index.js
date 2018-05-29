@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
-import { SELECT_CATEGORY, REQUEST_POSTS, RECEIVE_POSTS } from '../actions';
+import { SELECT_CATEGORY, INVALIDATE_POST ,REQUEST_POSTS, RECEIVE_POSTS } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
   switch (action.type) {
@@ -16,6 +16,11 @@ const posts = (state = {
   items: []
 }, action) => {
   switch (action.type) {
+    case INVALIDATE_POST:
+      return {
+        ...state,
+        didInvalidate: true
+      }
     case REQUEST_POSTS:
       return {
         ...state,
@@ -37,6 +42,11 @@ const posts = (state = {
 
 const postsByCategory = (state = {}, action) => {
   switch (action.type) {
+    case INVALIDATE_POST:
+      return {
+        ...state,
+        [action.selectedCategory]: posts(state[selectedCategory], action)
+      }
     case RECEIVE_POSTS:
     case REQUEST_POSTS:
       return {
@@ -49,7 +59,6 @@ const postsByCategory = (state = {}, action) => {
 }
 
 const rootReducer = combineReducers({
-  posts,
   postsByCategory,
   selectedCategory
 });

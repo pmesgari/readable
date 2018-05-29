@@ -1,10 +1,16 @@
 export const REQUEST_POSTS = 'REQUEST_POSTS';
 export const RECEIVE_POSTS = 'RECEIVE_POSTS';
 export const SELECT_CATEGORY = 'SELECT_CATEGORY';
+export const INVALIDATE_POST = 'INVALIDATE_POST';
 
 export const selectCategory = category => ({
     type: SELECT_CATEGORY,
     category
+});
+
+export const invalidatePost = (selectedCategory) => ({
+  type: INVALIDATE_POST,
+  selectedCategory
 });
 
 export const requestPosts = category => ({
