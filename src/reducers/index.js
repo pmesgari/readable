@@ -1,5 +1,11 @@
 import { combineReducers } from 'redux';
-import { SELECT_CATEGORY, INVALIDATE_POST ,REQUEST_POSTS, RECEIVE_POSTS } from '../actions';
+import { 
+  SELECT_CATEGORY,
+  INVALIDATE_POST,
+  REQUEST_POSTS,
+  RECEIVE_POSTS,
+  CHANGE_VOTE_POST
+} from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
   switch (action.type) {
@@ -35,6 +41,11 @@ const posts = (state = {
         items: action.posts,
         lastUpdated: action.receivedAt
       }
+    case CHANGE_VOTE_POST:
+    return Object.assign({}, state, {
+      'items': state.items.map((item) => item.id === action.post.id ? action.post : item
+      )
+    })
     default:
       return state
   }
@@ -52,6 +63,11 @@ const postsByCategory = (state = {}, action) => {
       return {
         ...state,
         [action.category]: posts(state[action.category], action)
+      }
+    case CHANGE_VOTE_POST:
+      return {
+        ...state,
+        [action.selectedCategory]: posts(state[action.selectedCategory], action)
       }
     default:
       return state
