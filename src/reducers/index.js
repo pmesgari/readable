@@ -4,7 +4,11 @@ import {
   INVALIDATE_POST,
   REQUEST_POSTS,
   RECEIVE_POSTS,
-  CHANGE_VOTE_POST
+  CHANGE_VOTE_POST,
+  REQUEST_POSTS_BY_CATEGORY,
+  RECEIVE_POSTS_BY_CATEGORY,
+  REQUEST_POST,
+  RECEIVE_POST
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -42,12 +46,39 @@ const posts = (state = {
         lastUpdated: action.receivedAt
       }
     case CHANGE_VOTE_POST:
-    return Object.assign({}, state, {
-      'items': state.items.map((item) => item.id === action.post.id ? action.post : item
-      )
-    })
+      return Object.assign({}, state, {
+        'items': state.items.map((item) => item.id === action.post.id ? action.post : item
+        )
+      })
     default:
       return state
+  }
+}
+
+export const normalizedPosts = (state = {
+  byId: {},
+  byCategory: {},
+  allIds: []
+}, action) => {
+  switch (action.type) {
+    case REQUEST_POSTS_BY_CATEGORY:
+      return {
+        ...state,
+        [action.selectedCategory]: {}
+      }
+    case RECEIVE_POSTS_BY_CATEGORY:
+      return {
+        ...state,
+        'byCategory': {...state['byCategory'], [action.category]: action.posts.reduce((acc, cur, i) => {
+          acc[cur.id] = cur
+          return acc;
+        }, {})}
+      }
+    case REQUEST_POST:
+    case RECEIVE_POST:
+    default:
+      return state;
+
   }
 }
 
@@ -75,6 +106,7 @@ const postsByCategory = (state = {}, action) => {
 }
 
 const rootReducer = combineReducers({
+  normalizedPosts,
   postsByCategory,
   selectedCategory
 });

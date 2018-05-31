@@ -1,3 +1,7 @@
+export const REQUEST_POSTS_BY_CATEGORY = 'REQUEST_POSTS_BY_CATEGORY';
+export const RECEIVE_POSTS_BY_CATEGORY = 'RECEIVE_POSTS_BY_CATEGORY';
+export const REQUEST_POST = 'REQUEST_POST';
+export const RECEIVE_POST = 'RECEIVE_POST';
 export const REQUEST_POSTS = 'REQUEST_POSTS';
 export const RECEIVE_POSTS = 'RECEIVE_POSTS';
 export const SELECT_CATEGORY = 'SELECT_CATEGORY';
@@ -5,6 +9,17 @@ export const INVALIDATE_POST = 'INVALIDATE_POST';
 export const CHANGE_VOTE_POST = 'CHANGE_VOTE_POST';
 
 const baseUrl = 'http://localhost:3001';
+
+export const requestPostsByCategory = category => ({
+  type: REQUEST_POSTS_BY_CATEGORY,
+  category
+});
+
+export const receivePostsByCategory = (category, json) => ({
+  type: RECEIVE_POSTS_BY_CATEGORY,
+  category,
+  posts: json
+})
 
 export const selectCategory = category => ({
   type: SELECT_CATEGORY,
@@ -46,7 +61,8 @@ const fetchPosts = category => dispatch => {
   .then(response => response.json())
   .then(json => {
     console.log("response", json);
-    dispatch(receivePosts(category, json))
+    dispatch(receivePosts(category, json));
+    dispatch(receivePostsByCategory(category, json));
   })
 }
 
@@ -69,7 +85,8 @@ export const changeVote = (upOrDown, selectedCategory, post) => dispatch => {
 }
 
 const shouldFetchPosts = (state, category) => {
-  const posts = state.postsByCategory[category];
+  // const posts = state.postsByCategory[category];
+  const posts = state.normalizedPosts.byCategory[category]
   if (!posts) {
     return true;
   }

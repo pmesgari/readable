@@ -45,8 +45,8 @@ class PostList extends React.Component {
                     <h5 className="card-title">{post.title}</h5>
                     <p className="card-text">{post.body}</p>
                     <div className="btn-container">
-                      <Link className="btn btn-primary" to="/modus-create">Edit</Link>
-                      <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Details</button>
+                      <Link className="btn btn-success" to={`/posts/${post.id}`}>Details</Link>
+                      <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Edit</button>
                       <button type="button" className="btn btn-danger">Remove</button>
                     </div>
                   </div>

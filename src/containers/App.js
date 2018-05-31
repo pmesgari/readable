@@ -3,6 +3,7 @@ import { Route, withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 import Picker from '../components/Picker';
 import PostList from '../components/PostList';
+import Post from '../components/Post';
 import { fetchPostsIfNeeded, selectCategory } from '../actions';
 
 class App extends Component {
@@ -36,18 +37,11 @@ class App extends Component {
             </div>
           );}}>
         </Route>
-        <Route path="/:id" component={Child} />
+        <Route path="/posts/:id" component={Post} />
       </div>
     );
   }
 }
-
-const Child = ({ match }) => (
-  <div>
-    <h3>ID: {match.params.id}</h3>
-  </div>
-);
-
 
 function mapStateToProps(state) {
   const { selectedCategory, postsByCategory } = state
