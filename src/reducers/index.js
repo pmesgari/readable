@@ -1,14 +1,14 @@
 import { combineReducers } from 'redux';
 import { 
   SELECT_CATEGORY,
-  INVALIDATE_POST,
   REQUEST_POSTS,
   RECEIVE_POSTS,
   CHANGE_VOTE_POST,
-  REQUEST_POSTS_BY_CATEGORY,
-  RECEIVE_POSTS_BY_CATEGORY,
-  REQUEST_POST,
-  RECEIVE_POST
+  CHANGE_VOTE_COMMENT,
+  REQUEST_COMMENTS,
+  RECEIVE_COMMENTS,
+  REMOVE_COMMENT,
+  REMOVE_POST
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -20,17 +20,12 @@ const selectedCategory = (state = 'all', action) => {
   }
 };
 
-const posts = (state = {
-  isFetching: false,
-  didInvalidate: false,
-  items: []
+export const normalizedPosts = (state = {
+  byId: {},
+  byCategory: {},
+  allIds: []
 }, action) => {
   switch (action.type) {
-    case INVALIDATE_POST:
-      return {
-        ...state,
-        didInvalidate: true
-      }
     case REQUEST_POSTS:
       return {
         ...state,
@@ -41,64 +36,69 @@ const posts = (state = {
       return {
         ...state,
         isFetching: false,
-        didInvalidate: false,
-        items: action.posts,
-        lastUpdated: action.receivedAt
+        byId: action.posts.reduce((acc, cur, i) => {
+          acc[cur.id] = cur;
+          return acc;
+        }, {}),
+        byCategory: action.posts.reduce((acc, cur, i) => {
+          if(acc[cur.category] === cur.category) {
+            acc[cur.category].push(cur.id)
+          } else {
+            acc[cur.category] = [];
+            acc[cur.category].push(cur.id);
+          }
+          return acc;
+        }, {}),
+        allIds: action.posts.reduce((acc, cur, i) => {
+          acc.push(cur.id);
+          return acc;
+        }, [])
       }
     case CHANGE_VOTE_POST:
-      return Object.assign({}, state, {
-        'items': state.items.map((item) => item.id === action.post.id ? action.post : item
-        )
-      })
+      return {
+        ...state,
+        byId: {...state["byId"], [action.post.id]: action.post}
+      }
+    case REMOVE_POST:
+      return {
+        ...state,
+        byId: {...state["byId"], [action.post.id]: {...state.byId[action.post.id], deleted: true}}
+      }
     default:
-      return state
+      return state;
   }
 }
 
-export const normalizedPosts = (state = {
+export const comments = (state = {
   byId: {},
-  byCategory: {},
+  byPost: {},
   allIds: []
 }, action) => {
   switch (action.type) {
-    case REQUEST_POSTS_BY_CATEGORY:
+    case REQUEST_COMMENTS:
       return {
         ...state,
-        [action.selectedCategory]: {}
+        isFetching: true
       }
-    case RECEIVE_POSTS_BY_CATEGORY:
+    case RECEIVE_COMMENTS:
       return {
         ...state,
-        'byCategory': {...state['byCategory'], [action.category]: action.posts.reduce((acc, cur, i) => {
-          acc[cur.id] = cur
+        isFetching: false,
+        byId: action.comments.reduce((acc, cur, i) => {
+          acc[cur.id] = cur;
           return acc;
-        }, {})}
+        }, state.byId),
+        byPost: {...state['byPost'], [action.postId]: action.comments.map( comment => comment.id)}
       }
-    case REQUEST_POST:
-    case RECEIVE_POST:
-    default:
-      return state;
-
-  }
-}
-
-const postsByCategory = (state = {}, action) => {
-  switch (action.type) {
-    case INVALIDATE_POST:
+    case CHANGE_VOTE_COMMENT:
       return {
         ...state,
-        [action.selectedCategory]: posts(state[selectedCategory], action)
+        byId: {...state["byId"], [action.comment.id]: action.comment}
       }
-    case RECEIVE_POSTS:
-    case REQUEST_POSTS:
+    case REMOVE_COMMENT:
       return {
         ...state,
-        [action.category]: posts(state[action.category], action)
-      }
-    case CHANGE_VOTE_POST:
-      return {
-        ...state,
-        [action.selectedCategory]: posts(state[action.selectedCategory], action)
+        byId: {...state["byId"], [action.comment.id]: {...state.byId[action.comment.id], deleted: true}}
       }
     default:
       return state
@@ -107,7 +107,7 @@ const postsByCategory = (state = {}, action) => {
 
 const rootReducer = combineReducers({
   normalizedPosts,
-  postsByCategory,
+  comments,
   selectedCategory
 });
 

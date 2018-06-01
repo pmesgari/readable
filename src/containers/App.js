@@ -8,8 +8,8 @@ import { fetchPostsIfNeeded, selectCategory } from '../actions';
 
 class App extends Component {
   componentDidMount() {
-    const { dispatch, selectedCategory } = this.props;
-    dispatch(fetchPostsIfNeeded(selectedCategory));
+    const { dispatch } = this.props;
+    dispatch(fetchPostsIfNeeded());
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.selectedCategory !== this.props.selectedCategory) {
@@ -37,23 +37,24 @@ class App extends Component {
             </div>
           );}}>
         </Route>
-        <Route path="/posts/:id" component={Post} />
+        <Route path="/posts/:category/:id" component={Post} />
       </div>
     );
   }
 }
 
 function mapStateToProps(state) {
-  const { selectedCategory, postsByCategory } = state
+  const { selectedCategory, normalizedPosts } = state
   const {
     isFetching,
     lastUpdated,
-    items: posts
-  } = postsByCategory[selectedCategory] || 
+    allIds: posts
+  } = normalizedPosts || 
   {
     isFetching: true,
-    items: []
+    allIds: []
   }
+
   return {
     selectedCategory,
     posts,
