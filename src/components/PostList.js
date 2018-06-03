@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { changeVote, removeItem } from '../actions';
+import { changeVote, removeItem, editItem } from '../actions';
 import '../index.css';
 
 class PostList extends React.Component {
@@ -16,9 +16,9 @@ class PostList extends React.Component {
   closePostModal = () => {
     this.setState(() => ({ postModal: false }))
   }
-  handlePostChange = (event) => {
+  handlePostChange = (event, key) => {
     let { value } = event.target;
-    let updatedPost = { ...this.state.selectedPost, 'body': value }
+    let updatedPost = { ...this.state.selectedPost, [key]: value }
     this.setState({ selectedPost: updatedPost })
   }
   changeVote = (upOrDown, post) => {
@@ -28,6 +28,10 @@ class PostList extends React.Component {
   removeItem = (type, item) => {
     const { dispatch } = this.props;
     dispatch(removeItem(type, item));
+  }
+  editItem = (type, item) => {
+    const { dispatch } = this.props;
+    dispatch(editItem(type, item));
   }
   componentDidMount() {
 
@@ -90,16 +94,22 @@ class PostList extends React.Component {
               </div>
               <div className="modal-body">
                 <p>{selectedPost.body}</p>
-                <textarea
-                  className="form-control"
-                  id="exampleFormControlTextarea1"
-                  rows="3"
-                  value={selectedPost.body}
-                  onChange={this.handlePostChange}></textarea>
+                <div className="input-group mb-3">
+                  <div className="input-group-prepend">
+                    <span className="input-group-text" id="post-title">Title</span>
+                  </div>
+                  <input value={selectedPost.title} onChange={(event) => this.handlePostChange(event, 'title')} type="text" className="form-control" placeholder="Username" aria-label="Title" aria-describedby="basic-addon1"/>
+                </div>
+                <div className="input-group mb-3">
+                  <div className="input-group-prepend">
+                    <span className="input-group-text" id="post-body">Body</span>
+                  </div>
+                  <textarea value={selectedPost.body} onChange={(event) => this.handlePostChange(event, 'body')} className="form-control" aria-label="With textarea"></textarea>
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={this.closePostModal}>Close</button>
-                <button type="button" className="btn btn-primary">Save changes</button>
+                <button type="button" className="btn btn-primary" onClick={() => this.editItem('post', selectedPost)}>Save changes</button>
               </div>
             </div>
           }

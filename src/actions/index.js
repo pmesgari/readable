@@ -10,6 +10,8 @@ export const REQUEST_COMMENTS = 'REQUEST_COMMENTS'
 export const RECEIVE_COMMENTS = 'RECEIVE_COMMENTS'
 export const REMOVE_POST = 'REMOVE_POST';
 export const REMOVE_COMMENT = 'REMOVE_COMMENT';
+export const EDIT_POST = 'EDIT_POST';
+export const EDIT_COMMENT = 'EDIT_COMMENT';
 
 const baseUrl = 'http://localhost:3001';
 
@@ -60,6 +62,16 @@ export const removePost = (post) => ({
 
 export const removeComment = (comment) => ({
   type: REMOVE_COMMENT,
+  comment: comment
+})
+
+export const editPost = (post) => ({
+  type: EDIT_POST,
+  post: post
+})
+
+export const editComment = (comment) => ({
+  type: EDIT_COMMENT,
   comment: comment
 })
 
@@ -126,6 +138,27 @@ export const removeItem = (type, item) => dispatch => {
   .then(json => {
     console.log('delete', json);
     type === 'post' ? dispatch(removePost(json)) : dispatch(removeComment(json));
+  })
+}
+
+export const editItem = (type, item) => dispatch => {
+  let url = type === 'post' ? `${baseUrl}/posts/${item.id}` : `${baseUrl}/comments/${item.id}`
+  let body = 
+    type === 'post' 
+    ? {"body": item.body, "title": item.title}
+    : {"body": item.body, "timestamp": new Date().getTime()}
+  return fetch(
+    url,
+    {
+      headers: { 'Authorization': 'x', 'content-type': 'application/json' },
+      method: 'PUT',
+      body: JSON.stringify(body)   
+    }
+  )
+  .then(response => response.json())
+  .then(json => {
+    console.log('delete', json);
+    type === 'post' ? dispatch(editPost(json)) : dispatch(editComment(json));
   })
 }
 

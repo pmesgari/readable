@@ -8,7 +8,9 @@ import {
   REQUEST_COMMENTS,
   RECEIVE_COMMENTS,
   REMOVE_COMMENT,
-  REMOVE_POST
+  REMOVE_POST,
+  EDIT_POST,
+  EDIT_COMMENT
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -64,6 +66,11 @@ export const normalizedPosts = (state = {
         ...state,
         byId: {...state["byId"], [action.post.id]: {...state.byId[action.post.id], deleted: true}}
       }
+    case EDIT_POST:
+      return {
+        ...state,
+        byId: {...state["byId"], [action.post.id]: action.post}
+      }
     default:
       return state;
   }
@@ -99,6 +106,11 @@ export const comments = (state = {
       return {
         ...state,
         byId: {...state["byId"], [action.comment.id]: {...state.byId[action.comment.id], deleted: true}}
+      }
+    case EDIT_COMMENT:
+      return {
+        ...state,
+        byId: {...state["byId"], [action.comment.id]: action.comment}
       }
     default:
       return state
