@@ -10,7 +10,8 @@ import {
   REMOVE_COMMENT,
   REMOVE_POST,
   EDIT_POST,
-  EDIT_COMMENT
+  EDIT_COMMENT,
+  ADD_POST
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -46,8 +47,13 @@ export const normalizedPosts = (state = {
           if(acc[cur.category] === cur.category) {
             acc[cur.category].push(cur.id)
           } else {
-            acc[cur.category] = [];
-            acc[cur.category].push(cur.id);
+            if(acc[cur.category]) {
+              acc[cur.category].push(cur.id);
+            } else {
+              acc[cur.category] = []
+              acc[cur.category].push(cur.id);
+            }
+            
           }
           return acc;
         }, {}),
@@ -69,6 +75,12 @@ export const normalizedPosts = (state = {
     case EDIT_POST:
       return {
         ...state,
+        byId: {...state["byId"], [action.post.id]: action.post}
+      }
+    case ADD_POST:
+      return {
+        ...state,
+        didInvalidate: true,
         byId: {...state["byId"], [action.post.id]: action.post}
       }
     default:

@@ -12,9 +12,13 @@ class App extends Component {
     dispatch(fetchPostsIfNeeded());
   }
   componentWillReceiveProps(nextProps) {
+    console.log('props:' , nextProps)
+    const { dispatch, selectedCategory, didInvalidate } = nextProps
     if (nextProps.selectedCategory !== this.props.selectedCategory) {
-      const { dispatch, selectedCategory } = nextProps
       dispatch(fetchPostsIfNeeded(selectedCategory))
+    }
+    if (didInvalidate) {
+      dispatch(fetchPostsIfNeeded(selectCategory))
     }
   }
   handleChange = nextCategory => {
@@ -47,6 +51,7 @@ function mapStateToProps(state) {
   const { selectedCategory, normalizedPosts } = state
   const {
     isFetching,
+    didInvalidate,
     lastUpdated,
     allIds: posts
   } = normalizedPosts || 
@@ -59,6 +64,7 @@ function mapStateToProps(state) {
     selectedCategory,
     posts,
     isFetching,
+    didInvalidate,
     lastUpdated
   }
 }

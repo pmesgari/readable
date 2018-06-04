@@ -2,19 +2,39 @@ import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { changeVote, removeItem, editItem } from '../actions';
+import { changeVote, removeItem, editItem, addItem } from '../actions';
+import Select from 'react-select';
+import uuid from 'uuid';
+import 'react-select/dist/react-select.css';
 import '../index.css';
 
 class PostList extends React.Component {
   state = {
+    postCategory: '',
+    editableItem: false,
+    newPost: false,
     postModal: false,
     selectedPost: null
   }
   openPostModal = (post) => {
-    this.setState(() => ({ postModal: true, selectedPost: post }))
+    const { posts } = this.props;
+    let postStruc = Object.keys(posts[0]).reduce((acc, cur, i) => {
+      acc[cur] = '';
+      return acc;
+    }, {})
+    postStruc = {...postStruc, id: uuid(), timestamp: Date.now(), category: this.state.postCategory}
+    if (post) {
+      this.setState(() => ({ postModal: true, selectedPost: post }))
+    } else {
+      this.setState(() => ({ postModal: true, selectedPost: postStruc, editableItem: true, newItem: true }))
+    }
+
   }
   closePostModal = () => {
-    this.setState(() => ({ postModal: false }))
+    this.setState(() => ({ postModal: false, editableItem: false, newItem: false }))
+  }
+  handleCategoryChange = (selectedOption) => {
+    this.setState(() => ({ postCategory: selectedOption, selectedPost: {...this.state.selectedPost, category: selectedOption.value} }))
   }
   handlePostChange = (event, key) => {
     let { value } = event.target;
@@ -33,6 +53,10 @@ class PostList extends React.Component {
     const { dispatch } = this.props;
     dispatch(editItem(type, item));
   }
+  addItem = (type, item) => {
+    const { dispatch } = this.props;
+    dispatch(addItem(type, item));
+  }
   componentDidMount() {
 
   }
@@ -40,10 +64,16 @@ class PostList extends React.Component {
     console.log(nextProps);
   }
   render() {
-    const { postModal, selectedPost } = this.state;
+    const { postModal, selectedPost, editableItem, newItem, postCategory } = this.state;
     const { posts } = this.props;
     return (
       <div>
+        <div className="row justify-content-end">
+          <div className="col-2">
+            <button type="button" className="btn btn-success" onClick={() => this.openPostModal()}>Add Post</button>
+          </div>
+        </div>
+        <br />
         <div className="row">
           {
             posts.map((post, i) => {
@@ -84,7 +114,8 @@ class PostList extends React.Component {
           }
         </div>
         <Modal isOpen={postModal} onRequestClose={this.closePostModal} contentLabel='Modal' overlayClassName='overlay' ariaHideApp={false}>
-          {selectedPost &&
+          {
+            selectedPost &&
             <div>
               <div className="modal-header">
                 <h5 className="modal-title">{selectedPost.title}</h5>
@@ -94,11 +125,25 @@ class PostList extends React.Component {
               </div>
               <div className="modal-body">
                 <p>{selectedPost.body}</p>
+                {newItem &&
+                  <Select
+                    name="form-field-name"
+                    value={postCategory}
+                    disabled={!editableItem}
+                    onChange={this.handleCategoryChange}
+                    options={[
+                      { value: 'react', label: 'react' },
+                      { value: 'redux', label: 'redux' },
+                      { value: 'udacity', label: 'udacity' }
+                    ]}
+                  />
+                }
+                <br/>
                 <div className="input-group mb-3">
                   <div className="input-group-prepend">
                     <span className="input-group-text" id="post-title">Title</span>
                   </div>
-                  <input value={selectedPost.title} onChange={(event) => this.handlePostChange(event, 'title')} type="text" className="form-control" placeholder="Username" aria-label="Title" aria-describedby="basic-addon1"/>
+                  <input value={selectedPost.title} onChange={(event) => this.handlePostChange(event, 'title')} type="text" className="form-control" placeholder="Title" aria-label="Title" aria-describedby="basic-addon1" />
                 </div>
                 <div className="input-group mb-3">
                   <div className="input-group-prepend">
@@ -106,10 +151,18 @@ class PostList extends React.Component {
                   </div>
                   <textarea value={selectedPost.body} onChange={(event) => this.handlePostChange(event, 'body')} className="form-control" aria-label="With textarea"></textarea>
                 </div>
+                <div className="input-group mb-3">
+                  <div className="input-group-prepend">
+                    <span className="input-group-text" id="post-author">Author</span>
+                  </div>
+                  <input disabled={!editableItem} value={selectedPost.author} onChange={(event) => this.handlePostChange(event, 'author')} type="text" className="form-control" placeholder="Author" aria-label="Author" aria-describedby="basic-addon1" />
+                </div>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={this.closePostModal}>Close</button>
-                <button type="button" className="btn btn-primary" onClick={() => this.editItem('post', selectedPost)}>Save changes</button>
+                <button type="button" className="btn btn-primary" 
+                  onClick={() => newItem ? this.addItem('post', selectedPost) : this.editItem('post', selectedPost)}
+                >Save changes</button>
               </div>
             </div>
           }

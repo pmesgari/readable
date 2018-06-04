@@ -12,6 +12,9 @@ export const REMOVE_POST = 'REMOVE_POST';
 export const REMOVE_COMMENT = 'REMOVE_COMMENT';
 export const EDIT_POST = 'EDIT_POST';
 export const EDIT_COMMENT = 'EDIT_COMMENT';
+export const ADD_POST = 'ADD_POST';
+export const ADD_COMMENT = 'ADD_COMMENT';
+
 
 const baseUrl = 'http://localhost:3001';
 
@@ -72,6 +75,16 @@ export const editPost = (post) => ({
 
 export const editComment = (comment) => ({
   type: EDIT_COMMENT,
+  comment: comment
+})
+
+export const addPost = (post) => ({
+  type: ADD_POST,
+  post: post
+})
+
+export const addComment = (comment) => ({
+  type: ADD_COMMENT,
   comment: comment
 })
 
@@ -157,8 +170,26 @@ export const editItem = (type, item) => dispatch => {
   )
   .then(response => response.json())
   .then(json => {
-    console.log('delete', json);
+    console.log('edit', json);
     type === 'post' ? dispatch(editPost(json)) : dispatch(editComment(json));
+  })
+}
+
+export const addItem = (type, item) => dispatch => {
+  let url = type === 'post' ? `${baseUrl}/posts` : `${baseUrl}/comments`
+  let body = item
+  return fetch(
+    url,
+    {
+      headers: { 'Authorization': 'x', 'content-type': 'application/json' },
+      method: 'POST',
+      body: JSON.stringify(body)   
+    }
+  )
+  .then(response => response.json())
+  .then(json => {
+    console.log('add', json);
+    type === 'post' ? dispatch(addPost(json)) : dispatch(addComment(json));
   })
 }
 
@@ -170,7 +201,7 @@ const shouldFetchPosts = (state) => {
   if (posts.isFetching) {
     return false
   }
-  return posts.didInvalidate;
+  return state.normalizedPosts.didInvalidate;
 }
 
 const shouldFetchComments = (state) => {
