@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { changeVote, removeItem, editItem, addItem } from '../actions';
+import { changeVote, removeItem, editItem, addItem, selectCategory } from '../actions';
 import Select from 'react-select';
 import uuid from 'uuid';
 import 'react-select/dist/react-select.css';
@@ -12,16 +12,31 @@ class PostList extends React.Component {
   state = {
     postCategory: '',
     editableItem: false,
-    newPost: false,
+    newItem: false,
     postModal: false,
     selectedPost: null
   }
   openPostModal = (post) => {
     const { posts } = this.props;
-    let postStruc = Object.keys(posts[0]).reduce((acc, cur, i) => {
-      acc[cur] = '';
-      return acc;
-    }, {})
+    let postStruc = {}
+    if(posts.length > 0) {
+      postStruc = Object.keys(posts[0]).reduce((acc, cur, i) => {
+        acc[cur] = '';
+        return acc;
+      }, {})
+    } else {
+      postStruc = {
+        id: '',
+        timestamp: '',
+        title: '',
+        body: '',
+        author: '',
+        category: '',
+        voteScore: '',
+        deleted: '',
+        commentCount: ''
+      }
+    }
     postStruc = {...postStruc, id: uuid(), timestamp: Date.now(), category: this.state.postCategory}
     if (post) {
       this.setState(() => ({ postModal: true, selectedPost: post }))
@@ -57,11 +72,12 @@ class PostList extends React.Component {
     const { dispatch } = this.props;
     dispatch(addItem(type, item));
   }
-  componentDidMount() {
-
-  }
-  componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
+  componentWillMount() {
+    if (this.props.match.params.category) {
+      this.props.dispatch(selectCategory(this.props.match.params.category))
+    } else {
+      this.props.dispatch(selectCategory('all'))
+    }
   }
   render() {
     const { postModal, selectedPost, editableItem, newItem, postCategory } = this.state;

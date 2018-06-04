@@ -2,10 +2,12 @@ import React from 'react';
 import { withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { changeVote, fetchCommentsIfNeeded, removeItem, editItem } from '../actions';
+import uuid from 'uuid';
+import { changeVote, fetchCommentsIfNeeded, removeItem, editItem, addItem } from '../actions';
 
 class Post extends React.Component {
   state = {
+    newItem: false,
     postModal: false,
     commentModal: false,
     selectedPost: null,
@@ -17,11 +19,35 @@ class Post extends React.Component {
   closePostModal = () => {
     this.setState(() => ({ postModal: false }))
   }
-  openCommentModal = (comment) => {
-    this.setState(() => ({ commentModal: true, selectedComment: comment }))
+  openCommentModal = (comment, parentId) => {
+    const { postComments } = this.props;
+    let commentStruc = {}
+    if (postComments.length > 0) {
+      commentStruc = Object.keys(postComments[0]).reduce((acc, cur, i) => {
+        acc[cur] = '';
+        return acc;
+      }, {})
+    } else {
+      commentStruc = {
+        id: '',
+        parentId: '',
+        timestamp: '',
+        body: '',
+        author: '',
+        voteScore: '',
+        deleted: '',
+        parentDeleted: ''
+      }
+    }
+    commentStruc = {...commentStruc, id: uuid(), timestamp: Date.now(), parentId: parentId}
+    if (comment) {
+      this.setState(() => ({ commentModal: true, selectedComment: comment }))
+    } else {
+      this.setState(() => ({ commentModal: true, selectedComment: commentStruc, editableItem: true, newItem: true }))
+    }
   }
   closeCommentModal = () => {
-    this.setState(() => ({ commentModal: false }))
+    this.setState(() => ({ commentModal: false, editableItem: false, newItem: false }))
   }
   handlePostChange = (event, key) => {
     let { value } = event.target;
@@ -32,9 +58,6 @@ class Post extends React.Component {
     let { value } = event.target;
     let updatedComment = { ...this.state.selectedComment, [key]: value }
     this.setState({ selectedComment: updatedComment });
-  }
-  componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
   }
   changeVote = (upOrDown, type, post) => {
     const { dispatch } = this.props;
@@ -52,12 +75,16 @@ class Post extends React.Component {
     const { dispatch } = this.props;
     dispatch(editItem(type, item));
   }
+  addItem = (type, item) => {
+    const { dispatch } = this.props;
+    dispatch(addItem(type, item));
+  }
   componentDidMount() {
     const { dispatch, match } = this.props;
     dispatch(fetchCommentsIfNeeded(match.params.id));
   }
   render() {
-    const { postModal, selectedPost, commentModal, selectedComment } = this.state;
+    const { postModal, selectedPost, commentModal, selectedComment, newItem } = this.state;
     const { post, postComments } = this.props;
     return (
       <div className="row">
@@ -71,6 +98,7 @@ class Post extends React.Component {
                 <div className="btn-container">
                   <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Edit</button>
                   <button type="button" className="btn btn-danger" onClick={() => this.removeItem('post', post)}>Remove</button>
+                  <button type="button" className="btn btn-success" onClick={() => this.openCommentModal('', post.id)}>Add comment</button>
                 </div>
                 <br />
                 <div className="list-group">
@@ -154,7 +182,8 @@ class Post extends React.Component {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={this.closeCommentModal}>Close</button>
-                <button type="button" className="btn btn-primary" onClick={() => this.editItem('comment', selectedComment)}>Save changes</button>
+                <button type="button" className="btn btn-primary" 
+                  onClick={() => newItem ? this.addItem('comment', selectedComment) : this.editItem('comment', selectedComment)}>Save changes</button>
               </div>
             </div>
           }

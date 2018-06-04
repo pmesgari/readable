@@ -11,7 +11,8 @@ import {
   REMOVE_POST,
   EDIT_POST,
   EDIT_COMMENT,
-  ADD_POST
+  ADD_POST,
+  ADD_COMMENT
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -123,6 +124,13 @@ export const comments = (state = {
       return {
         ...state,
         byId: {...state["byId"], [action.comment.id]: action.comment}
+      }
+    case ADD_COMMENT:
+      return {
+        ...state,
+        didInvalidate: true,
+        byId: {...state["byId"], [action.comment.id]: action.comment},
+        byPost: {...state['byPost'], [action.comment.parentId]: [...state.byPost[action.comment.parentId], action.comment.id] }
       }
     default:
       return state
