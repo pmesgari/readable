@@ -2,9 +2,10 @@ import React from 'react';
 import { Link, withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
-import { changeVote, removeItem, editItem, addItem, selectCategory } from '../actions';
+import { changeVote, removeItem, editItem, addItem, selectCategory, selectSort } from '../actions';
 import Select from 'react-select';
 import uuid from 'uuid';
+import * as _ from 'lodash';
 import 'react-select/dist/react-select.css';
 import '../index.css';
 
@@ -14,7 +15,9 @@ class PostList extends React.Component {
     editableItem: false,
     newItem: false,
     postModal: false,
-    selectedPost: null
+    selectedPost: null,
+    errorMessage: '',
+    error: false
   }
   openPostModal = (post) => {
     const { posts } = this.props;
@@ -46,10 +49,10 @@ class PostList extends React.Component {
 
   }
   closePostModal = () => {
-    this.setState(() => ({ postModal: false, editableItem: false, newItem: false }))
+    this.setState(() => ({ postModal: false, editableItem: false, newItem: false, error: false, errorMessage: '' }))
   }
   handleCategoryChange = (selectedOption) => {
-    this.setState(() => ({ postCategory: selectedOption, selectedPost: {...this.state.selectedPost, category: selectedOption.value} }))
+    this.setState(() => ({ postCategory: selectedOption, selectedPost: {...this.state.selectedPost, category: selectedOption.value}, error: false, errorMessage: '' }))
   }
   handlePostChange = (event, key) => {
     let { value } = event.target;
@@ -70,7 +73,15 @@ class PostList extends React.Component {
   }
   addItem = (type, item) => {
     const { dispatch } = this.props;
-    dispatch(addItem(type, item));
+    if (!item.category) {
+      this.setState({error: true, errorMessage: 'Category is required.'})
+    } else {
+      dispatch(addItem(type, item));
+    }
+  }
+  handleSortChange = (item, key, mode) => {
+    let { dispatch } = this.props;
+    dispatch(selectSort(item, key, mode));
   }
   componentWillMount() {
     if (this.props.match.params.category) {
@@ -80,7 +91,7 @@ class PostList extends React.Component {
     }
   }
   render() {
-    const { postModal, selectedPost, editableItem, newItem, postCategory } = this.state;
+    const { postModal, selectedPost, editableItem, newItem, postCategory, errorMessage } = this.state;
     const { posts } = this.props;
     return (
       <div>
@@ -90,6 +101,11 @@ class PostList extends React.Component {
           </div>
         </div>
         <br />
+        <div className="col-12">
+          <button type="button" className="btn btn-outline-success" onClick={() => this.handleSortChange('post', 'timestamp', 'desc')}>Sort by date</button>
+          <button type="button" className="btn btn-outline-success" onClick={() => this.handleSortChange('post', 'voteScore', 'desc')}>Sort by score</button>
+        </div>
+        <br/>
         <div className="row">
           {
             posts.map((post, i) => {
@@ -109,6 +125,7 @@ class PostList extends React.Component {
                       <div className="card-footer text-muted">
                         <div className="author">Author: {post.author}</div>
                         <div className="comments">Comments: {post.commentCount}</div>
+                        <div className="timestamp">Timestamp: {new Date(post.timestamp).toString()}</div>
                         <div className="vote-container">
                           <div className="post-score">{post.voteScore}</div>
                           <button className="btn btn-outline-primary" onClick={() => this.changeVote('up', post)}>
@@ -141,6 +158,7 @@ class PostList extends React.Component {
               </div>
               <div className="modal-body">
                 <p>{selectedPost.body}</p>
+                <p>{errorMessage}</p>
                 {newItem &&
                   <Select
                     name="form-field-name"
@@ -189,14 +207,26 @@ class PostList extends React.Component {
 }
 
 const mapStateToProps = state => {
-  const { normalizedPosts, selectedCategory } = state;
+  const { normalizedPosts, selectedCategory, selectedSort } = state;
   const postsById =
     selectedCategory === 'all' ? normalizedPosts.allIds : normalizedPosts.byCategory[selectedCategory]
   let posts = []
-  if (postsById) {
-    posts = postsById.map((postId) => {
-      return normalizedPosts.byId[postId];
-    });
+  if (!_.isEmpty(selectedSort)) {
+    if (postsById) {
+      posts = _.orderBy(
+        postsById.map((postId) => {
+          return normalizedPosts.byId[postId];
+        }),
+        [selectedSort.key],
+        [selectedSort.mode]
+      )
+    }
+  } else{
+    if (postsById) {
+      posts = postsById.map((postId) => {
+        return normalizedPosts.byId[postId];
+      });
+    }
   }
 
   return {

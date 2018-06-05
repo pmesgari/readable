@@ -12,7 +12,8 @@ import {
   EDIT_POST,
   EDIT_COMMENT,
   ADD_POST,
-  ADD_COMMENT
+  ADD_COMMENT,
+  SELECT_SORT
 } from '../actions';
 
 const selectedCategory = (state = 'all', action) => {
@@ -23,6 +24,20 @@ const selectedCategory = (state = 'all', action) => {
       return state
   }
 };
+
+const selectedSort = (state = {}, action) => {
+  switch (action.type) {
+    case SELECT_SORT:
+      return {
+        ...state,
+        item: action.item,
+        key: action.key,
+        mode: action.mode
+      }
+    default:
+      return state
+  }
+}
 
 export const normalizedPosts = (state = {
   byId: {},
@@ -140,7 +155,8 @@ export const comments = (state = {
 const rootReducer = combineReducers({
   normalizedPosts,
   comments,
-  selectedCategory
+  selectedCategory,
+  selectedSort
 });
 
 export default rootReducer;

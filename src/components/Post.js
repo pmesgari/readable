@@ -3,7 +3,8 @@ import { withRouter } from "react-router-dom";
 import { connect } from 'react-redux';
 import Modal from 'react-modal';
 import uuid from 'uuid';
-import { changeVote, fetchCommentsIfNeeded, removeItem, editItem, addItem } from '../actions';
+import * as _ from 'lodash';
+import { changeVote, fetchCommentsIfNeeded, removeItem, editItem, addItem, selectSort } from '../actions';
 
 class Post extends React.Component {
   state = {
@@ -39,7 +40,7 @@ class Post extends React.Component {
         parentDeleted: ''
       }
     }
-    commentStruc = {...commentStruc, id: uuid(), timestamp: Date.now(), parentId: parentId}
+    commentStruc = { ...commentStruc, id: uuid(), timestamp: Date.now(), parentId: parentId }
     if (comment) {
       this.setState(() => ({ commentModal: true, selectedComment: comment }))
     } else {
@@ -79,81 +80,109 @@ class Post extends React.Component {
     const { dispatch } = this.props;
     dispatch(addItem(type, item));
   }
-  componentDidMount() {
-    const { dispatch, match } = this.props;
-    dispatch(fetchCommentsIfNeeded(match.params.id));
+  handleSortChange = (item, key, mode) => {
+    let { dispatch } = this.props;
+    dispatch(selectSort(item, key, mode));
   }
+  componentDidMount() {
+    const { dispatch, match, post } = this.props;
+    if (post) {
+      this.setState((prevState) => {return {deleted: false}});
+      dispatch(fetchCommentsIfNeeded(match.params.id));
+    } else {
+      this.setState((prevState) => {return {deleted: !prevState.deleted}});
+      console.log('wait');
+    }
+    
+  }
+  // shouldComponentUpdate(nextProps) {
+  //   console.log(nextProps);
+  //   if (!_.isEmpty(nextProps.post)) {
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
   render() {
     const { postModal, selectedPost, commentModal, selectedComment, newItem } = this.state;
     const { post, postComments } = this.props;
     return (
       <div className="row">
         {
-          post &&
           <div className="col-12">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">{post.title}</h5>
-                <p className="card-text">{post.body}</p>
-                <div className="btn-container">
-                  <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Edit</button>
-                  <button type="button" className="btn btn-danger" onClick={() => this.removeItem('post', post)}>Remove</button>
-                  <button type="button" className="btn btn-success" onClick={() => this.openCommentModal('', post.id)}>Add comment</button>
+            {
+              post && !post.deleted &&
+              <div className="col-12">
+                <div className="col-12">
+                  <button type="button" className="btn btn-outline-success" onClick={() => this.handleSortChange('post', 'timestamp', 'desc')}>Sort by date</button>
+                  <button type="button" className="btn btn-outline-success" onClick={() => this.handleSortChange('post', 'voteScore', 'desc')}>Sort by score</button>
                 </div>
                 <br />
-                <div className="list-group">
-                  {postComments &&
-                    postComments.map((comment, i) => {
-                      if (!comment.deleted) {
-                        return (
-                          <div key={i} >
-                              <div className="card">
-                                <div className="card-body">
-                                  <p className="card-text">{comment.body}</p>
-                                </div>
-                                <div className="card-footer text-muted">
-                                  <div className="author">Author: {comment.author}</div>
-                                  <div className="comment-score">Vote Score: {comment.voteScore}</div>
-                                  <div className="comment-timestamp">Timestamp: {new Date(comment.timestamp).toString()}</div>
-                                  <div className="btn-container">
-                                    <button className="btn btn-outline-success" onClick={() => this.openCommentModal(comment)}>
-                                      <i className="fa fa-edit"></i>
-                                    </button>
-                                    <button className="btn btn-outline-danger" onClick={() => this.removeItem('comment', comment)}>
-                                      <i className="fa fa-trash"></i>
-                                    </button>
-                                    <button className="btn btn-outline-primary" onClick={() => this.changeVote('up', 'comment', comment)}>
-                                      <i className="fa fa-thumbs-up"></i>
-                                    </button>
-                                    <button className="btn btn-outline-danger" onClick={() => this.changeVote('down', 'comment', comment)}>
-                                      <i className="fa fa-thumbs-down"></i>
-                                    </button>
+                <div className="card">
+                  <div className="card-body">
+                    <h5 className="card-title">{post.title}</h5>
+                    <p className="card-text">{post.body}</p>
+                    <div className="btn-container">
+                      <button type="button" className="btn btn-primary" onClick={() => this.openPostModal(post)}>Edit</button>
+                      <button type="button" className="btn btn-danger" onClick={() => this.removeItem('post', post)}>Remove</button>
+                      <button type="button" className="btn btn-success" onClick={() => this.openCommentModal('', post.id)}>Add comment</button>
+                    </div>
+                    <br />
+                    <div className="list-group">
+                      {postComments &&
+                        postComments.map((comment, i) => {
+                          if (!comment.deleted) {
+                            return (
+                              <div key={i} >
+                                <div className="card">
+                                  <div className="card-body">
+                                    <p className="card-text">{comment.body}</p>
+                                  </div>
+                                  <div className="card-footer text-muted">
+                                    <div className="author">Author: {comment.author}</div>
+                                    <div className="comment-score">Vote Score: {comment.voteScore}</div>
+                                    <div className="comment-timestamp">Timestamp: {new Date(comment.timestamp).toString()}</div>
+                                    <div className="btn-container">
+                                      <button className="btn btn-outline-success" onClick={() => this.openCommentModal(comment)}>
+                                        <i className="fa fa-edit"></i>
+                                      </button>
+                                      <button className="btn btn-outline-danger" onClick={() => this.removeItem('comment', comment)}>
+                                        <i className="fa fa-trash"></i>
+                                      </button>
+                                      <button className="btn btn-outline-primary" onClick={() => this.changeVote('up', 'comment', comment)}>
+                                        <i className="fa fa-thumbs-up"></i>
+                                      </button>
+                                      <button className="btn btn-outline-danger" onClick={() => this.changeVote('down', 'comment', comment)}>
+                                        <i className="fa fa-thumbs-down"></i>
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                          </div>
-                        )
-                      } else {
-                        return false
-                      }
-                    }
-                    )}
+                            )
+                          } else {
+                            return false
+                          }
+                        }
+                        )}
+                    </div>
+                  </div>
+                  <div className="card-footer text-muted">
+                    <div className="author">Author: {post.author}</div>
+                    <div className="comments">Comments: {post.commentCount}</div>
+                    <div className="vote-container">
+                      <div className="post-score">{post.voteScore}</div>
+                      <button className="btn btn-outline-primary" onClick={() => this.changeVote('up', 'post', post)}>
+                        <i className="fa fa-thumbs-up"></i>
+                      </button>
+                      <button className="btn btn-outline-danger" onClick={() => this.changeVote('down', 'post', post)}>
+                        <i className="fa fa-thumbs-down"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="card-footer text-muted">
-                <div className="author">Author: {post.author}</div>
-                <div className="comments">Comments: {post.commentCount}</div>
-                <div className="vote-container">
-                  <div className="post-score">{post.voteScore}</div>
-                  <button className="btn btn-outline-primary" onClick={() => this.changeVote('up', 'post', post)}>
-                    <i className="fa fa-thumbs-up"></i>
-                  </button>
-                  <button className="btn btn-outline-danger" onClick={() => this.changeVote('down', 'post', post)}>
-                    <i className="fa fa-thumbs-down"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
+            }
           </div>
         }
         <Modal overlayClassName="Overlay" isOpen={commentModal} onRequestClose={this.closeCommentModal} contentLabel='Modal' ariaHideApp={false}>
@@ -182,7 +211,7 @@ class Post extends React.Component {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={this.closeCommentModal}>Close</button>
-                <button type="button" className="btn btn-primary" 
+                <button type="button" className="btn btn-primary"
                   onClick={() => newItem ? this.addItem('comment', selectedComment) : this.editItem('comment', selectedComment)}>Save changes</button>
               </div>
             </div>
@@ -226,17 +255,29 @@ class Post extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   const { match } = ownProps;
-  const { normalizedPosts, comments } = state;
+  const { normalizedPosts, comments, selectedSort } = state;
 
   const post = normalizedPosts.byId[match.params.id]
   const commentsByPost = comments.byPost[match.params.id]
 
   let postComments = []
 
-  if (commentsByPost) {
-    postComments = commentsByPost.map(commentId => {
-      return comments.byId[commentId];
-    })
+  if (!_.isEmpty(selectedSort)) {
+    if (commentsByPost) {
+      postComments = _.orderBy(
+        commentsByPost.map(commentId => {
+          return comments.byId[commentId];
+        }),
+        [selectedSort.key],
+        [selectedSort.mode]
+      )
+    }
+  } else {
+    if (commentsByPost) {
+      postComments = commentsByPost.map(commentId => {
+        return comments.byId[commentId];
+      })
+    }
   }
 
   return {

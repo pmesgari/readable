@@ -14,6 +14,7 @@ export const EDIT_POST = 'EDIT_POST';
 export const EDIT_COMMENT = 'EDIT_COMMENT';
 export const ADD_POST = 'ADD_POST';
 export const ADD_COMMENT = 'ADD_COMMENT';
+export const SELECT_SORT = 'SELECT_SORT';
 
 
 const baseUrl = 'http://localhost:3001';
@@ -22,6 +23,13 @@ export const selectCategory = category => ({
   type: SELECT_CATEGORY,
   category
 });
+
+export const selectSort = (item, key, mode) => ({
+  type: SELECT_SORT,
+  item: item,
+  key: key,
+  mode: mode
+})
 
 export const invalidatePost = (selectedCategory) => ({
   type: INVALIDATE_POST,
@@ -140,11 +148,13 @@ export const changeVote = (upOrDown, type, item) => dispatch => {
 
 export const removeItem = (type, item) => dispatch => {
   let url = type === 'post' ? `${baseUrl}/posts/${item.id}` : `${baseUrl}/comments/${item.id}`
+  let body = {...item, deleted: true};
   return fetch(
     url,
     {
       headers: { 'Authorization': 'x', 'content-type': 'application/json' },
-      method: 'DELETE'      
+      method: 'PUT',
+      body: JSON.stringify(body)
     }
   )
   .then(response => response.json())
